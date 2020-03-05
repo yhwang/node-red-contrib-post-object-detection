@@ -1,0 +1,94 @@
+<script type="text/javascript">
+    RED.nodes.registerType('post-object-detection',{
+        category: 'Models',
+        color: '#F3B567',
+        defaults: {
+            classesURL: {
+                value:'https://s3.sjc.us.cloud-object-storage.appdomain.cloud/tfjs-cos/cocossd/classes.json',
+                required: true,
+                validate: function(v) {
+                try {
+                    let url = new URL(v);
+                    if (url.protocol === 'file:' || url.protocol.startsWith('http')) {
+                        return true;
+                    }
+                } catch (e) {}
+                return false;
+        }},
+            name: {value:''}
+        },
+        inputs:1,
+        outputs:1,
+        icon: 'font-awesome/fa-object-group',
+        label: function() {
+            return this.name||'PostObjectDetection';
+        }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="post-object-detection">
+    <div class="form-row">
+        <label for="node-input-classesURL"><i class="fa fa-tag"></i>Class URL</label>
+        <input type="text" id="node-input-classesURL" placeholder="classesURL">
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i>Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="post-object-detection">
+    <p>Use this to process the results of Object Detection according to
+       the classes from the <b>Class URL</b>
+    </p>
+
+    <h3>Config Settings</h3>
+    <dl class="message-properties">
+        <dt>Class URL
+            <span class="property-type">string</span>
+        </dt>
+        <dd>
+            Point to a JSON file containing the classes information. Inside
+            the JSON file, there shall be an object. Its property names are
+            class indexes and values are class names. The format of the URL
+            is <i>[file|http|https]://full-path</i>.
+        </dd>
+    </dl>
+
+    <h3>Inputs</h3>
+    <dl class="message-properties">
+        <dt>payload
+            <span class="property-type">tf.Tensor[]</span>
+        </dt>
+        <dd>
+            Receive the results of Object Detection. It shall be an array of
+            two tf.Tensors. First tensor is the detected objects and its shape
+            would be [1, number of box detectors, number of classes]. 1 is the
+            batch size and we only support 1 for now. The second tensor is the
+            bounding boxes for each detected object and its shape would be
+            [1, number of box detectors, 1, 4]. 4 is the four coordinates of
+            the box.
+        </dd>
+    </dl>
+
+    <h3>Outputs</h3>
+    <dl class="message-properties">
+        <dt>payload
+            <span class="property-type">Object[]</span>
+        </dt>
+        <dd>
+            Each object in the array represents a detected object containing
+            <code>bbox, className</code> and <code>score</code> properties.
+        </dd>
+    </dl>
+
+    <h3>Details</h3>
+    <p><code>msg.payload</code> is the object detection results and its type
+        is <code>tf.Tensor[]</code>. Its size is two, first one is the detected
+        object and second one is the object boxes. The classes information is
+        retrieved from the <code>Class URL</code> setting. Combine with the
+        object detection results and classes information, the
+        <code>output</code> is an array of detected objects and each object
+        contains <code>bbox, className</code> and <code>score</code> properties.
+    </p>
+</script>
