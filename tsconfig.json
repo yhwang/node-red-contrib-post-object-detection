@@ -20,5 +20,8 @@
     "allowUnreachableCode": false,
     "experimentalDecorators": true
   },
-  "include": ["src/**/*"]
+  "include": [
+    "src/post-object-detection/**/*",
+    "src/bbox-image/**/*"
+   ]
 }

@@ -1,0 +1,67 @@
+<script type="text/javascript">
+    RED.nodes.registerType('bbox-image',{
+        category: 'Models',
+        color: '#F3B567',
+        defaults: {
+            name: {value:''}
+        },
+        inputs:1,
+        outputs:1,
+        icon: 'font-awesome/fa-file-image-o',
+        label: function() {
+            return this.name||'BBoxImage';
+        }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="bbox-image">
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i>Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="bbox-image">
+    <p>
+        Annotate the bouding boxes of detected objects into the original image.
+    </p>
+
+    <h3>Inputs</h3>
+    <dl class="message-properties">
+        <dt>payload
+            <span class="property-type">Object</span>
+        </dt>
+        <dd>
+            The payload shall contain two properties: <i>objects</i> and
+            <i>image</i>. The value of <i>objects</i> is an array of the
+            following objects:
+<pre>
+<code>
+{
+  bbox: [x, y, w, h],
+  className: string,
+  score: number
+}
+</code>
+</pre>
+            <i>image</i> is an image in <i>Buffer</i> data type.
+        </dd>
+    </dl>
+
+    <h3>Outputs</h3>
+    <dl class="message-properties">
+        <dt>payload
+            <span class="property-type">Buffer</span>
+        </dt>
+        <dd>
+            The annotated image in <i>Buffer</i> data type.
+        </dd>
+    </dl>
+
+    <h3>Details</h3>
+    <p><code>msg.payload</code> is the image and object detection results
+        containing the classes and bounding boxes information. Then this
+        node annotates the bounding boxes into the image. The image with
+        bounding boxes is sent to the next node as msg.payload.
+    </p>
+</script>

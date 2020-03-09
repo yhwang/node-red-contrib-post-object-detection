@@ -32,6 +32,12 @@ npm install node-red-contrib-post-object-detection
 
 ## Usage
 
+There are two custom Node-RED nodes in this package:
+- post-object-detection: This is used to process the output of Object Detection
+  model.
+- bbox-image: This is used to annotate the original image with bounding boxes.
+
+### `post-object-detection` node
 The input for this node shall be an array of `tf.Tensorf` and its length is 2.
 First tensor is the detected objects with
 `[1, number of box detectors, number of classes]` shape. 1 is the batch size.
@@ -50,7 +56,24 @@ a JSON file contains the `id` and `className` for each class. For example:
 Then it calculates the object detection results and returns the detected
 objects as an `Object[]`. Each object contains `bbox`, `className` and
 `score` properties.
-- bbox: the coordicates of the box, width and height: `[x1, y1, w, h]`.
+- bbox: the coordicates of the box, width and height: `[x, y, w, h]`.
   They are float number between 0.0 and 1.0.
 - className: the name of the class
 - score: the confident value between 0.0 and 1.0.
+
+### `bbox-image` node
+The `msg.payload` psssed to this node shall be an object and contains two
+properties:
+- image: the image data in Buffer data type.
+- objects: an object array containing a list of detected objects.
+  Each object has the following information:
+  ```
+  {
+    bbox: [x, y, w, h],
+    className: string,
+    score: number
+  }
+  ```
+
+This node annotates the bounding box of detected objects into the image and
+sends to the next node as a Buffer.

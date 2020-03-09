@@ -132,7 +132,7 @@ function fetchClasses(urlStr: string): Promise<ImageClasses> {
 }
 
 // Module for a Node-Red custom node
-export = function postObjectDetection(RED: NodeRed) {
+export = function init(RED: NodeRed) {
 
   class PostObjectDetection {
     // tslint:disable-next-line:no-any
