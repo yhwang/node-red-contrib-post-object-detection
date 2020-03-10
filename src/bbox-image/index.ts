@@ -1,4 +1,4 @@
-import { Image, Canvas, CanvasRenderingContext2D, createCanvas } from 'canvas';
+import { Image, createCanvas } from 'canvas';
 
 const COLORS = ['Aqua', 'Coral', 'Cyan', 'Yellow', 'GreenYellow' ];
 
@@ -49,7 +49,7 @@ type NodeRedNodes = {
  */
 type NodeRedReceivedMessage = {
   payload: {
-    image: string | Buffer;
+    image: Buffer;
     objects : DetectedObject[]
   };
 };
@@ -63,6 +63,17 @@ type StatusOption = {
   shape?: 'ring' | 'dot';
   text?: string;
 };
+
+/**
+ * Sequentially use COLORS
+ */
+const getColor: () => string = function colorCounter() {
+  let counter = 0;
+  return () => {
+    counter %= COLORS.length;
+    return COLORS[counter++];
+  };
+}();
 
 // Module for a Node-Red custom node
 export = function init(RED: NodeRed) {
@@ -90,15 +101,11 @@ export = function init(RED: NodeRed) {
     }
 
     // Handle a single request
-    handleRequest(image: string | Buffer, objects: DetectedObject[]) {
+    handleRequest(image: Buffer, objects: DetectedObject[]) {
       const img = new Image();
-      let canvas: Canvas;
-      let ctx: CanvasRenderingContext2D;
       img.onload = () => {
-        canvas = createCanvas(img.width, img.height);
-        ctx = canvas.getContext('2d');        
-        this.drawBBox(ctx, img, objects);
-        this.send({payload: canvas.toBuffer()});
+        const imgBuff = this.drawBBox(img, objects);
+        this.send({payload: imgBuff});
       };
       img.onerror = (err) => {
         throw err;
@@ -111,38 +118,37 @@ export = function init(RED: NodeRed) {
       done();
     }
 
-    drawBBox(ctx: CanvasRenderingContext2D, image: Image,
-        objects: DetectedObject[]) {
+    drawBBox(image: Image, objects: DetectedObject[]): Buffer {
 
+      const canvas = createCanvas(image.width, image.height);
+      const ctx = canvas.getContext('2d');
       ctx.drawImage(image, 0, 0);
       ctx.lineWidth = 2;
 
-      let counter = 0;
       objects.forEach((obj) => {
-        // draw the box
-        ctx.beginPath();
-        ctx.strokeStyle = COLORS[counter];
-        let [x1, y1, w, h] = obj.bbox;
-        x1 = Math.round(x1 * image.width);
+        const color = getColor();
+        let [x, y, w, h] = obj.bbox;
+        x = Math.round(x * image.width);
         w = Math.round(w * image.width);
-        y1 = Math.round(y1 * image.height);
+        y = Math.round(y * image.height);
         h = Math.round(h * image.height);
-        ctx.rect(x1, y1, w, h);
-        ctx.stroke();
-        // draw the text box
         const txtMet = ctx.measureText(obj.className);
-        let ty = y1 - 11;
+        let ty = y - 11;
         ty = ty < 0 ? 0 : ty;
-        // using default font: 10px sans-serif
-        ctx.fillStyle = COLORS[counter];
-        ctx.fillRect(x1 - 1, ty, txtMet.width + 4, 11);
-        // draw the text
+
+        // draw the box
+        ctx.strokeStyle = color;
+        ctx.strokeRect(x, y, w, h);
+        // draw the text box
+        ctx.fillStyle = color;
+        ctx.fillRect(x - 1, ty, txtMet.width + 4, 11);
+        // draw the text and use default font: 10px sans-serif
         ctx.fillStyle = 'Black';
         ctx.fillText(obj.className,
-            x1 + 1, 
+            x + 1, 
             ty + Math.round(txtMet.emHeightAscent));
-        counter = ++counter % COLORS.length;
       });
+      return canvas.toBuffer();
     }
   }
 
