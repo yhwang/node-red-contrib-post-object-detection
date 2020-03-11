@@ -32,6 +32,8 @@ type NodeRedProperties = {
   type: string;
   name: string;
   classesURL: string;
+  iou: string;
+  minScore: string;
   wires: NodeRedWires;
 };
 
@@ -145,9 +147,15 @@ export = function init(RED: NodeRed) {
     classesURL: string;
     classes: ImageClasses;
     maxNumBoxes = 20;
+    iou: number;
+    minScore: number;
 
     constructor(config: NodeRedProperties) {
       this.classesURL = config.classesURL.trim();
+      config.iou = config.iou || '0.5';
+      config.minScore = config.minScore || '0.5';
+      this.iou = parseFloat(config.iou);
+      this.minScore = parseFloat(config.minScore);
 
       RED.nodes.createNode(this, config);
       this.on('input', (msg: NodeRedReceivedMessage) => {
@@ -192,7 +200,7 @@ export = function init(RED: NodeRed) {
         const boxes2 =
             tf.tensor2d(boxes, [inputs[1].shape[1], inputs[1].shape[3]]);
         return tf.image.nonMaxSuppression(
-            boxes2, maxScores, this.maxNumBoxes, 0.5, 0.5);
+            boxes2, maxScores, this.maxNumBoxes, this.iou, this.minScore);
       });
       const indexes = indexTensor.dataSync() as Float32Array;
       indexTensor.dispose();

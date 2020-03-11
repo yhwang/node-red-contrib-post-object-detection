@@ -24,6 +24,15 @@ Install `@tensorflow/tfjs-node`:
 npm install @tensorflow/tfjs-node
 ```
 
+This custom Node-RED node leverages `node-canvas` npm package to draw the bounding
+boxes on a image. Please make sure the platform running the Node-RED fulfills the
+prerequisites listed [here](https://www.npmjs.com/package/canvas#compiling). For
+example, while using Ubuntu, you need to run the following command to install
+the dependencies:
+```
+sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
+```
+
 ### Install this module:
 Once you install the peer dependency, you can install this module:
 ```

@@ -14,7 +14,9 @@
                     }
                 } catch (e) {}
                 return false;
-        }},
+            }},
+            iou: { value: "0.5", required: true},
+            minScore: { value: "0.5", required: true},
             name: {value:''}
         },
         inputs:1,
@@ -28,11 +30,19 @@
 
 <script type="text/x-red" data-template-name="post-object-detection">
     <div class="form-row">
-        <label for="node-input-classesURL"><i class="fa fa-tag"></i>Class URL</label>
+        <label for="node-input-classesURL"><i class="fa fa-tag"></i> Class URL</label>
         <input type="text" id="node-input-classesURL" placeholder="classesURL">
     </div>
     <div class="form-row">
-        <label for="node-input-name"><i class="fa fa-tag"></i>Name</label>
+        <label for="node-input-iou"><i class="fa fa-adjust"></i> IoU</label>
+        <input type="number" id="node-input-iou" max="1.0" min="0.1" step="0.1" value="0.5">
+    </div>
+    <div class="form-row">
+        <label for="node-input-minScore"><i class="fa fa-adjust"></i> Min Score</label>
+        <input type="number" id="node-input-minScore" max="1.0" min="0.1" step="0.1" value="0.5">
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
 </script>
@@ -52,6 +62,19 @@
             the JSON file, there shall be an object. Its property names are
             class indexes and values are class names. The format of the URL
             is <i>[file|http|https]://full-path</i>.
+        </dd>
+        <dt>IoU
+            <span class="property-type">number</span>
+        </dt>
+        <dd>
+            Specify the Intersection over Union(IoU) to calculate the bounding
+            box results.
+        </dd>
+        <dt>Min Score
+            <span class="property-type">number</span>
+        </dt>
+        <dd>
+            Specify the minmal score to filter out the boxes.
         </dd>
     </dl>
 
@@ -90,5 +113,7 @@
         object detection results and classes information, the
         <code>output</code> is an array of detected objects and each object
         contains <code>bbox, className</code> and <code>score</code> properties.
+        You can adjust the Intersection over Union(IoU) and minimal scroe (Min Score)
+        per your need.
     </p>
 </script>
