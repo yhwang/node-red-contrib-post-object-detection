@@ -84,6 +84,7 @@ export = function init(RED: NodeRed) {
     send: (msg: NodeRedSendMessage) => void;
     status: (option: StatusOption) => void;
     log: (msg: string) => void;
+    error: (msg: string) => void;
 
     classesURL: string;
     maxNumBoxes = 20;
@@ -102,13 +103,19 @@ export = function init(RED: NodeRed) {
 
     // Handle a single request
     handleRequest(image: Buffer, objects: DetectedObject[]) {
+      if (image === undefined || !Buffer.isBuffer(image) ||
+          objects === undefined) {
+        this.error('No image or objects in the msg.payload');
+        return;
+      }
+
       const img = new Image();
       img.onload = () => {
         const imgBuff = this.drawBBox(img, objects);
         this.send({payload: imgBuff});
       };
       img.onerror = (err) => {
-        throw err;
+        this.error(err.message);
       };
       img.src = image;
     }
