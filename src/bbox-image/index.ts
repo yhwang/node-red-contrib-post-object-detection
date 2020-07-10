@@ -48,10 +48,12 @@ type NodeRedNodes = {
  * Represent Node-Red's message that passes to a node
  */
 type NodeRedReceivedMessage = {
-  payload: {
-    image: Buffer;
-    objects : DetectedObject[]
-  };
+  payload: BBoxInfo | Buffer;
+};
+
+type BBoxInfo = {
+  image: Buffer;
+  objects: DetectedObject[]
 };
 
 type NodeRedSendMessage = {
@@ -93,7 +95,8 @@ export = function init(RED: NodeRed) {
 
       RED.nodes.createNode(this, config);
       this.on('input', (msg: NodeRedReceivedMessage) => {
-        this.handleRequest(msg.payload.image, msg.payload.objects);
+        const bboxinfo = msg.payload as BBoxInfo;
+        this.handleRequest(bboxinfo.image, bboxinfo.objects, msg);
       });
 
       this.on('close', (done: () => void) => {
@@ -102,7 +105,9 @@ export = function init(RED: NodeRed) {
     }
 
     // Handle a single request
-    handleRequest(image: Buffer, objects: DetectedObject[]) {
+    handleRequest(image: Buffer, objects: DetectedObject[],
+        origMsg: NodeRedReceivedMessage) {
+
       if (image === undefined || !Buffer.isBuffer(image) ||
           objects === undefined) {
         this.error('No image or objects in the msg.payload');
@@ -112,7 +117,9 @@ export = function init(RED: NodeRed) {
       const img = new Image();
       img.onload = () => {
         const imgBuff = this.drawBBox(img, objects);
-        this.send({payload: imgBuff});
+        const newMsg = origMsg as NodeRedSendMessage;
+        newMsg.payload = imgBuff;
+        this.send(newMsg);
       };
       img.onerror = (err) => {
         this.error(err.message);

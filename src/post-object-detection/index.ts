@@ -50,12 +50,8 @@ type NodeRedNodes = {
 /**
  * Represent Node-Red's message that passes to a node
  */
-type NodeRedReceivedMessage = {
-  payload: tf.Tensor[];
-};
-
-type NodeRedSendMessage = {
-  payload: DetectedObject[];
+type NodeRedMessage = {
+  payload: tf.Tensor[] | DetectedObject[];
 };
 
 type ImageClasses = {
@@ -139,7 +135,7 @@ export = function init(RED: NodeRed) {
   class PostObjectDetection {
     // tslint:disable-next-line:no-any
     on: (event: string, fn: (msg: any) => void) => void;
-    send: (msg: NodeRedSendMessage) => void;
+    send: (msg: NodeRedMessage) => void;
     status: (option: StatusOption) => void;
     log: (msg: string) => void;
     getClassName: (idx: number) => string;
@@ -158,8 +154,9 @@ export = function init(RED: NodeRed) {
       this.minScore = parseFloat(config.minScore);
 
       RED.nodes.createNode(this, config);
-      this.on('input', (msg: NodeRedReceivedMessage) => {
-        this.handleRequest(msg.payload);
+      this.on('input', (msg: NodeRedMessage) => {
+        const data = msg.payload as tf.Tensor[];
+        this.handleRequest(data, msg);
       });
 
       this.on('close', (done: () => void) => {
@@ -190,7 +187,7 @@ export = function init(RED: NodeRed) {
     // Handle a single request
     // The following implementation is from:
     // https://github.com/tensorflow/tfjs-models/blob/master/coco-ssd/src/index.ts
-    handleRequest(inputs: tf.Tensor[]) {
+    handleRequest(inputs: tf.Tensor[], origMsg: NodeRedMessage) {
       const scores = inputs[0].dataSync() as Float32Array;
       const boxes = inputs[1].dataSync() as Float32Array;
       tf.dispose(inputs);
@@ -207,7 +204,8 @@ export = function init(RED: NodeRed) {
 
       const obj = this.buildDetectedObjects(
           boxes, maxScores, indexes, classes);
-      this.send({payload: obj});
+      origMsg.payload = obj;
+      this.send(origMsg);
     }
 
     handleClose(done: () => void) {
