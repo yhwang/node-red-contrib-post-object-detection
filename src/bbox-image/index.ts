@@ -142,10 +142,13 @@ export = function init(RED: NodeRed) {
       objects.forEach((obj) => {
         const color = getColor();
         let [x, y, w, h] = obj.bbox;
-        x = Math.round(x * image.width);
-        w = Math.round(w * image.width);
-        y = Math.round(y * image.height);
-        h = Math.round(h * image.height);
+        if( x < 1 ) {
+          // box coordinates are a percentage 
+          x = Math.round(x * image.width);
+          w = Math.round(w * image.width);
+          y = Math.round(y * image.height);
+          h = Math.round(h * image.height);
+        }
         const txtMet = ctx.measureText(obj.className);
         let ty = y - 11;
         ty = ty < 0 ? 0 : ty;
