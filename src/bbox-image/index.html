@@ -1,22 +1,29 @@
-<script type="text/javascript">
-    RED.nodes.registerType('bbox-image',{
-        category: 'Models',
-        color: '#F3B567',
-        defaults: {
-            name: {value:''}
-        },
-        inputs:1,
-        outputs:1,
-        icon: 'font-awesome/fa-file-image-o',
-        label: function() {
-            return this.name||'BBoxImage';
-        }
-    });
-</script>
-
 <script type="text/x-red" data-template-name="bbox-image">
     <div class="form-row">
-        <label for="node-input-name"><i class="fa fa-tag"></i>Name</label>
+        <label for="node-input-strokeWidth" style="white-space:nowrap"><i class="fa fa-pencil" aria-hidden="true"></i> Stroke Width</label>
+        <input type="text" id="node-input-strokeWidth" style="width:100px;" placeholder="strokeWidth">
+        <input type="hidden" id="node-input-stroke">
+        <label for="node-input-strokeWidth"> px</label>
+
+    </div>
+    <div class="form-row">
+        <label for="node-input-fontSize" style="white-space:nowrap"><i class="fa fa-font" aria-hidden="true"></i> Font Size</label>
+        <input type="text" id="node-input-fontSize" style="width:100px;" placeholder="fontSize">
+        <input type="hidden" id="node-input-font">
+        <label for="node-input-fontSize"> px</label>
+    </div>
+    <div class="form-row">
+        <label for="node-input-objectsProp"><i class="fa fa-tag"></i> Objects</label>
+        <input type="text" id="node-input-objectsProp" placeholder="objectsProp">
+        <input type="hidden" id="node-input-objectsPropType">
+    </div>
+    <div class="form-row">
+        <label for="node-input-imageProp"><i class="fa fa-tag"></i> Image</label>
+        <input type="text" id="node-input-imageProp" placeholder="imageProp">
+        <input type="hidden" id="node-input-imagePropType">
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
 </script>
@@ -45,6 +52,9 @@
 </code>
 </pre>
             <i>image</i> is an image in <i>Buffer</i> data type.
+            You can also use <i>Objects</i> property to specify where to
+            retrieve the <i>objects</i> information. Same as the <i>Image</i>
+            property for <i>image</i> data.
         </dd>
     </dl>
 
@@ -64,4 +74,72 @@
         node annotates the bounding boxes into the image. The image with
         bounding boxes is sent to the next node as msg.payload.
     </p>
+</script>
+<script type="text/html" data-template-name="bbox-image">
+    $("#node-input-example1").typedInput({
+        type:"str",
+        types:["str","num","bool"],
+        typeField: "#node-input-example1-type"
+    })
+</script>
+<script type="text/javascript">
+    RED.nodes.registerType('bbox-image',{
+        category: 'Models',
+        color: '#F3B567',
+        defaults: {
+            strokeWidth: { value: '2', validate:RED.validators.number(), required: false},
+            fontSize: { value: '10', validate:RED.validators.number(), required: false},
+            objectsProp: { value: 'payload.objects', required: false },
+            objectsPropType: { value:'msgPayload' },
+            imageProp: { value: 'payload.image', required: false},
+            imagePropType: { value: 'msgPayload' },
+            name: {value:''}
+        },
+        inputs:1,
+        outputs:1,
+        icon: 'font-awesome/fa-file-image-o',
+        label: function() {
+            return this.name||'BBoxImage';
+        },
+        oneditprepare: function() {
+            const msgPayload = {
+                value: "msgPayload",
+                label: "msg.payload."
+            };
+            $("#node-input-fontSize").typedInput({
+                default:'num',
+                typeField: $("#node-input-font"),
+                types:['num']
+            });
+            $("#node-input-strokeWidth").typedInput({
+                default:'num',
+                typeField: $("#node-input-stroke"),
+                types:['num']
+            });
+            $("#node-input-objectsProp").typedInput({
+                default:'msgPayload',
+                types:['msg', msgPayload],
+                typeField: "#node-input-objectsPropType"
+            });
+            $("#node-input-imageProp").typedInput({
+                default:"msgPayload",
+                types:['msg', msgPayload],
+                typeField: "#node-input-imagePropType"
+            });
+            if (!$("#node-input-strokeWidth").typedInput('value').length) {
+                $("#node-input-strokeWidth").typedInput('value', 2);
+            }
+            if (!$("#node-input-fontSize").typedInput('value').length) {
+                $("#node-input-fontSize").typedInput('value', 10);
+            }
+            if (!$("#node-input-objectsProp").typedInput('value').length) {
+                $("#node-input-objectsProp").typedInput('type', 'msgPayload');
+                $("#node-input-objectsProp").typedInput('value', 'objects');
+            }
+            if (!$("#node-input-imageProp").typedInput('value').length) {
+                $("#node-input-imageProp").typedInput('type', 'msgPayload');
+                $("#node-input-imageProp").typedInput('value', 'image');
+            }
+        }
+    });
 </script>

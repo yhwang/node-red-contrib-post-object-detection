@@ -32,6 +32,12 @@ type NodeRedProperties = {
   type: string;
   name: string;
   wires: NodeRedWires;
+  strokeWidth: string;
+  fontSize: string;
+  objectsProp: string;
+  objectsPropType: string;
+  imageProp: string;
+  imagePropType: string;
 };
 
 /**
@@ -90,13 +96,49 @@ export = function init(RED: NodeRed) {
 
     classesURL: string;
     maxNumBoxes = 20;
+    strokeWidth = 2;
+    fontSize = 10;
+    objectsProp = 'objects';
+    imageProp = 'image';
+    objectsPropType = 'msgPayload';
+    imagePropType = 'msgPayload';
 
     constructor(config: NodeRedProperties) {
+      if (config.strokeWidth) {
+        try {
+          this.strokeWidth = parseInt(config.strokeWidth, 10);
+        } catch {}
+      }
+      if (config.fontSize) {
+        try {
+          this.fontSize = parseInt(config.fontSize, 10);
+        } catch {}
+      }
+      if (config.objectsPropType) {
+        this.objectsPropType = config.objectsPropType;
+        this.objectsProp = config.objectsProp;
+      }
+      if (config.imagePropType) {
+        this.imageProp = config.imageProp;
+        this.imagePropType = config.imagePropType;
+      }
 
       RED.nodes.createNode(this, config);
-      this.on('input', (msg: NodeRedReceivedMessage) => {
-        const bboxinfo = msg.payload as BBoxInfo;
-        this.handleRequest(bboxinfo.image, bboxinfo.objects, msg);
+      // tslint:disable-next-line:no-any
+      this.on('input', (msg: any) => {
+        let bboxObjects: DetectedObject[];
+        let bboxImage: Buffer;
+        if (this.objectsPropType === 'msg') {
+          bboxObjects = msg[this.objectsProp] as DetectedObject[];
+        } else {
+          bboxObjects = msg.payload[this.objectsProp];
+        }
+        if (this.imagePropType === 'msg') {
+          bboxImage = msg[this.imageProp] as Buffer;
+        } else {
+          bboxImage = msg.payload[this.imageProp] as Buffer;
+        }
+        this.handleRequest(bboxImage, bboxObjects, msg);
       });
 
       this.on('close', (done: () => void) => {
@@ -110,7 +152,7 @@ export = function init(RED: NodeRed) {
 
       if (image === undefined || !Buffer.isBuffer(image) ||
           objects === undefined) {
-        this.error('No image or objects in the msg.payload');
+        this.error('Image object is invalid');
         return;
       }
 
@@ -137,7 +179,7 @@ export = function init(RED: NodeRed) {
       const canvas = createCanvas(image.width, image.height);
       const ctx = canvas.getContext('2d');
       ctx.drawImage(image, 0, 0);
-      ctx.lineWidth = 2;
+      ctx.lineWidth = this.strokeWidth;
 
       objects.forEach((obj) => {
         const color = getColor();
@@ -149,8 +191,10 @@ export = function init(RED: NodeRed) {
           y = Math.round(y * image.height);
           h = Math.round(h * image.height);
         }
+
+        ctx.font = `${this.fontSize}px sans-serif`;
         const txtMet = ctx.measureText(obj.className);
-        let ty = y - 11;
+        let ty = y - this.fontSize - 1;
         ty = ty < 0 ? 0 : ty;
 
         // draw the box
@@ -158,8 +202,7 @@ export = function init(RED: NodeRed) {
         ctx.strokeRect(x, y, w, h);
         // draw the text box
         ctx.fillStyle = color;
-        ctx.fillRect(x - 1, ty, txtMet.width + 4, 11);
-        // draw the text and use default font: 10px sans-serif
+        ctx.fillRect(x - 1, ty, txtMet.width + 4, this.fontSize + 1);
         ctx.fillStyle = 'Black';
         ctx.fillText(obj.className,
             x + 1, 
