@@ -206,7 +206,7 @@ export = function init(RED: NodeRed) {
         ctx.fillStyle = 'Black';
         ctx.fillText(obj.className,
             x + 1, 
-            ty + Math.round(txtMet.emHeightAscent));
+            ty + Math.round(txtMet.actualBoundingBoxAscent));
       });
       return canvas.toBuffer();
     }
