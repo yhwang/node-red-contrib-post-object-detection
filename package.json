@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-post-object-detection",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "A Node-RED custom node that processes the Object Detection results",
   "main": "dist/post-object-detection/index.js",
   "scripts": {
